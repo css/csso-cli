@@ -1,0 +1,69 @@
+{
+  "name": "csso-cli",
+  "version": "1.0.0",
+  "description": "Command line interface for CSSO",
+  "keywords": [
+    "cli",
+    "css",
+    "minifier",
+    "minify",
+    "compress",
+    "optimisation"
+  ],
+  "homepage": "https://github.com/css/csso-cli",
+  "author": "Roman Dvornov <rdvornov@gmail.com> (https://github.com/lahmatiy)",
+  "maintainers": [
+    {
+      "name": "Roman Dvornov",
+      "email": "rdvornov@gmail.com",
+      "github-username": "lahmatiy"
+    }
+  ],
+  "license": "MIT",
+  "repository": "css/csso-cli",
+  "bugs": {
+    "url": "https://github.com/css/csso-cli/issues"
+  },
+  "bin": {
+    "csso": "./bin/csso"
+  },
+  "main": "./index",
+  "eslintConfig": {
+    "env": {
+      "node": true,
+      "mocha": true,
+      "es6": true
+    },
+    "rules": {
+      "no-duplicate-case": 2,
+      "no-undef": 2,
+      "no-unused-vars": [2, {"vars": "all", "args": "after-used"}]
+    }
+  },
+  "scripts": {
+    "test": "mocha --reporter dot",
+    "codestyle": "jscs bin test index.js && eslint bin test index.js",
+    "codestyle-and-test": "npm run codestyle && npm test",
+    "travis": "npm run codestyle-and-test"
+  },
+  "dependencies": {
+    "clap": "^1.0.9",
+    "csso": "^2.0.0",
+    "source-map": "^0.5.3"
+  },
+  "devDependencies": {
+    "eslint": "^2.2.0",
+    "jscs": "~2.10.0",
+    "mocha": "~2.4.2"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "files": [
+    "bin",
+    "index.js",
+    "HISTORY.md",
+    "LICENSE",
+    "README.md"
+  ]
+}
