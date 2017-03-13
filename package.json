@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "clap": "^1.0.9",
-    "csso": "^2.0.0",
+    "csso": "^3.0.0",
     "source-map": "^0.5.3"
   },
   "devDependencies": {
