@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var cli = require('clap');
+var chokidar = require('chokidar');
 var csso = require('csso');
 var SourceMapConsumer = require('source-map').SourceMapConsumer;
 
@@ -196,6 +197,7 @@ var command = cli.create('csso', '[input] [output]')
     .option('--comments <value>', 'Comments to keep: exclamation (default), first-exclamation or none', 'exclamation')
     .option('--stat', 'Output statistics in stderr')
     .option('--debug [level]', 'Output intermediate state of CSS during compression', debugLevel, 0)
+    .option('--watch', 'Watch source file for changes')
     .action(function(args) {
         var options = this.values;
         var inputFile = options.input || args[0];
@@ -208,6 +210,7 @@ var command = cli.create('csso', '[input] [output]')
         var comments = processCommentsOption(options.comments);
         var debug = options.debug;
         var statistics = options.stat;
+        var watchFile = options.watch;
         var inputStream;
 
         if (process.stdin.isTTY && !inputFile && !outputFile) {
@@ -243,91 +246,102 @@ var command = cli.create('csso', '[input] [output]')
             }
         }
 
-        readFromStream(inputStream, function(source) {
-            var time = process.hrtime();
-            var mem = process.memoryUsage().heapUsed;
-            var sourceMap = resolveSourceMap(source, inputMap, map, inputFile, outputFile);
-            var sourceMapAnnotation = '';
-            var result;
+        minifyFile();
 
-            // main action
-            try {
-                result = csso.minify(source, {
-                    filename: inputFile,
-                    sourceMap: sourceMap.output,
-                    usage: usageData,
-                    restructure: !structureOptimisationOff,
-                    comments: comments,
-                    debug: debug
-                });
+        if (watchFile) {
+            chokidar.watch(inputFile).on('change', function() {
+                inputStream = fs.createReadStream(inputFile);
+                minifyFile();
+            });
+        }
 
-                // for backward capability minify returns a string
-                if (typeof result === 'string') {
-                    result = {
-                        css: result,
-                        map: null
-                    };
-                }
-            } catch (e) {
-                if (e.parseError) {
-                    showParseError(source, inputFile, e.parseError, e.message);
-                    if (!debug) {
-                        process.exit(2);
+        function minifyFile() {
+            readFromStream(inputStream, function(source) {
+                var time = process.hrtime();
+                var mem = process.memoryUsage().heapUsed;
+                var sourceMap = resolveSourceMap(source, inputMap, map, inputFile, outputFile);
+                var sourceMapAnnotation = '';
+                var result;
+
+                // main action
+                try {
+                    result = csso.minify(source, {
+                        filename: inputFile,
+                        sourceMap: sourceMap.output,
+                        usage: usageData,
+                        restructure: !structureOptimisationOff,
+                        comments: comments,
+                        debug: debug
+                    });
+
+                    // for backward capability minify returns a string
+                    if (typeof result === 'string') {
+                        result = {
+                            css: result,
+                            map: null
+                        };
                     }
+                } catch (e) {
+                    if (e.parseError) {
+                        showParseError(source, inputFile, e.parseError, e.message);
+                        if (!debug) {
+                            process.exit(2);
+                        }
+                    }
+
+                    throw e;
                 }
 
-                throw e;
-            }
+                if (sourceMap.output && result.map) {
+                    // apply input map
+                    if (sourceMap.input) {
+                        result.map.applySourceMap(
+                            new SourceMapConsumer(sourceMap.input),
+                            inputFile
+                        );
+                    }
 
-            if (sourceMap.output && result.map) {
-                // apply input map
-                if (sourceMap.input) {
-                    result.map.applySourceMap(
-                        new SourceMapConsumer(sourceMap.input),
-                        inputFile
+                    // add source map to result
+                    if (sourceMap.outputFile) {
+                        // write source map to file
+                        fs.writeFileSync(sourceMap.outputFile, result.map.toString(), 'utf-8');
+                        sourceMapAnnotation = '\n' +
+                            '/*# sourceMappingURL=' +
+                            path.relative(outputFile ? path.dirname(outputFile) : process.cwd(), sourceMap.outputFile) +
+                            ' */';
+                    } else {
+                        // inline source map
+                        sourceMapAnnotation = '\n' +
+                            '/*# sourceMappingURL=data:application/json;base64,' +
+                            new Buffer(result.map.toString()).toString('base64') +
+                            ' */';
+                    }
+
+                    result.css += sourceMapAnnotation;
+                }
+
+                // output result
+                if (outputFile) {
+                    fs.writeFileSync(outputFile, result.css, 'utf-8');
+                } else {
+                    console.log(result.css);
+                }
+
+                // output statistics
+                if (statistics) {
+                    var timeDiff = process.hrtime(time);
+                    showStat(
+                        path.relative(process.cwd(), inputFile),
+                        source.length,
+                        result.css.length,
+                        sourceMap.inputFile,
+                        sourceMapAnnotation.length,
+                        parseInt(timeDiff[0] * 1e3 + timeDiff[1] / 1e6, 10),
+                        process.memoryUsage().heapUsed - mem
                     );
                 }
-
-                // add source map to result
-                if (sourceMap.outputFile) {
-                    // write source map to file
-                    fs.writeFileSync(sourceMap.outputFile, result.map.toString(), 'utf-8');
-                    sourceMapAnnotation = '\n' +
-                        '/*# sourceMappingURL=' +
-                        path.relative(outputFile ? path.dirname(outputFile) : process.cwd(), sourceMap.outputFile) +
-                        ' */';
-                } else {
-                    // inline source map
-                    sourceMapAnnotation = '\n' +
-                        '/*# sourceMappingURL=data:application/json;base64,' +
-                        new Buffer(result.map.toString()).toString('base64') +
-                        ' */';
-                }
-
-                result.css += sourceMapAnnotation;
-            }
-
-            // output result
-            if (outputFile) {
-                fs.writeFileSync(outputFile, result.css, 'utf-8');
-            } else {
-                console.log(result.css);
-            }
-
-            // output statistics
-            if (statistics) {
-                var timeDiff = process.hrtime(time);
-                showStat(
-                    path.relative(process.cwd(), inputFile),
-                    source.length,
-                    result.css.length,
-                    sourceMap.inputFile,
-                    sourceMapAnnotation.length,
-                    parseInt(timeDiff[0] * 1e3 + timeDiff[1] / 1e6, 10),
-                    process.memoryUsage().heapUsed - mem
-                );
-            }
-        });
+            });
+        }
     });
 
 module.exports = {
