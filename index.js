@@ -185,6 +185,158 @@ function processCommentsOption(value) {
     process.exit(2);
 }
 
+function processOptions(options, args) {
+    var inputFile = options.input || args[0];
+    var outputFile = options.output || args[1];
+    var usageFile = options.usage;
+    var usageData = false;
+    var map = options.map;
+    var inputMap = options.inputMap;
+    var restructure = !options.restructureOff;
+    var declarationList = options.declarationList;
+    var comments = processCommentsOption(options.comments);
+    var debug = options.debug;
+    var statistics = options.stat;
+    var watch = options.watch;
+
+    if (process.stdin.isTTY && !inputFile && !outputFile) {
+        return null;
+    }
+
+    if (!inputFile) {
+        inputFile = '<stdin>';
+    } else {
+        inputFile = path.resolve(process.cwd(), inputFile);
+    }
+
+    if (outputFile) {
+        outputFile = path.resolve(process.cwd(), outputFile);
+    }
+
+    if (usageFile) {
+        if (!fs.existsSync(usageFile)) {
+            console.error('Usage data file doesn\'t found (%s)', usageFile);
+            process.exit(2);
+        }
+
+        usageData = fs.readFileSync(usageFile, 'utf-8');
+
+        try {
+            usageData = JSON.parse(usageData);
+        } catch (e) {
+            console.error('Usage data parse error (%s)', usageFile);
+            process.exit(2);
+        }
+    }
+
+    return {
+        inputFile: inputFile,
+        outputFile: outputFile,
+        usageData: usageFile,
+        map: map,
+        inputMap: inputMap,
+        restructure: restructure,
+        declarationList: declarationList,
+        comments: comments,
+        statistics: statistics,
+        debug: debug,
+        watch: watch
+    };
+}
+
+function minifyStream(options) {
+    var inputStream = options.inputFile !== '<stdin>'
+        ? fs.createReadStream(options.inputFile)
+        : process.stdin;
+
+    readFromStream(inputStream, function(source) {
+        var time = process.hrtime();
+        var mem = process.memoryUsage().heapUsed;
+        var sourceMap = resolveSourceMap(source, options.inputMap, options.map, options.inputFile, options.outputFile);
+        var sourceMapAnnotation = '';
+        var result;
+
+        // main action
+        try {
+            var minifyFunc = options.declarationList ? csso.minifyBlock : csso.minify;
+            result = minifyFunc(source, {
+                filename: options.inputFile,
+                sourceMap: sourceMap.output,
+                usage: options.usageData,
+                restructure: options.restructure,
+                comments: options.comments,
+                debug: options.debug
+            });
+
+            // for backward capability minify returns a string
+            if (typeof result === 'string') {
+                result = {
+                    css: result,
+                    map: null
+                };
+            }
+        } catch (e) {
+            if (e.parseError) {
+                showParseError(source, options.inputFile, e.parseError, e.message);
+                if (!options.debug) {
+                    process.exit(2);
+                }
+            }
+
+            throw e;
+        }
+
+        if (sourceMap.output && result.map) {
+            // apply input map
+            if (sourceMap.input) {
+                result.map.applySourceMap(
+                    new SourceMapConsumer(sourceMap.input),
+                    options.inputFile
+                );
+            }
+
+            // add source map to result
+            if (sourceMap.outputFile) {
+                // write source map to file
+                fs.writeFileSync(sourceMap.outputFile, result.map.toString(), 'utf-8');
+                sourceMapAnnotation = '\n' +
+                    '/*# sourceMappingURL=' +
+                    path.relative(options.outputFile ? path.dirname(options.outputFile) : process.cwd(), sourceMap.outputFile) +
+                    ' */';
+            } else {
+                // inline source map
+                sourceMapAnnotation = '\n' +
+                    '/*# sourceMappingURL=data:application/json;base64,' +
+                    new Buffer(result.map.toString()).toString('base64') +
+                    ' */';
+            }
+
+            result.css += sourceMapAnnotation;
+        }
+
+        // output result
+        if (options.outputFile) {
+            fs.writeFileSync(options.outputFile, result.css, 'utf-8');
+        } else {
+            console.log(result.css);
+        }
+
+        // output statistics
+        if (options.statistics) {
+            var timeDiff = process.hrtime(time);
+            showStat(
+                path.relative(process.cwd(), options.inputFile),
+                source.length,
+                result.css.length,
+                sourceMap.inputFile,
+                sourceMapAnnotation.length,
+                parseInt(timeDiff[0] * 1e3 + timeDiff[1] / 1e6, 10),
+                process.memoryUsage().heapUsed - mem
+            );
+        }
+    });
+}
+
 var command = cli.create('csso', '[input] [output]')
     .version(require('csso/package.json').version)
     .option('-i, --input <filename>', 'Input file')
@@ -193,144 +345,29 @@ var command = cli.create('csso', '[input] [output]')
     .option('-u, --usage <filename>', 'Usage data file')
     .option('--input-map <source>', 'Input source map: none, auto (default) or <filename>', 'auto')
     .option('--restructure-off', 'Turns structure minimization off')
-    .option('--declaration-list', 'Treats input as declaration list')
+    .option('--declaration-list', 'Treat input as a declaration list')
     .option('--comments <value>', 'Comments to keep: exclamation (default), first-exclamation or none', 'exclamation')
     .option('--stat', 'Output statistics in stderr')
     .option('--debug [level]', 'Output intermediate state of CSS during compression', debugLevel, 0)
+    .option('--watch', 'Watch source file for changes')
     .action(function(args) {
-        var options = this.values;
-        var inputFile = options.input || args[0];
-        var outputFile = options.output || args[1];
-        var usageFile = options.usage;
-        var usageData = false;
-        var map = options.map;
-        var inputMap = options.inputMap;
-        var structureOptimisationOff = options.restructureOff;
-        var declarationList = options.declarationList;
-        var comments = processCommentsOption(options.comments);
-        var debug = options.debug;
-        var statistics = options.stat;
-        var inputStream;
+        var options = processOptions(this.values, args);
 
-        if (process.stdin.isTTY && !inputFile && !outputFile) {
+        if (options === null) {
             this.showHelp();
             return;
         }
 
-        if (!inputFile) {
-            inputFile = '<stdin>';
-            inputStream = process.stdin;
-        } else {
-            inputFile = path.resolve(process.cwd(), inputFile);
-            inputStream = fs.createReadStream(inputFile);
+        minifyStream(options);
+
+        // enable watch mode only when input is a file
+        if (options.watch && options.inputFile !== '<stdin>') {
+            // NOTE: require chokidar here to keep down start up time when --watch doesn't use
+            // (yep, chokidar adds a penalty ~0.2-0.3s on its init)
+            require('chokidar').watch(options.inputFile).on('change', function() {
+                minifyStream(options);
+            });
         }
-
-        if (outputFile) {
-            outputFile = path.resolve(process.cwd(), outputFile);
-        }
-
-        if (usageFile) {
-            if (!fs.existsSync(usageFile)) {
-                console.error('Usage data file doesn\'t found (%s)', usageFile);
-                process.exit(2);
-            }
-
-            usageData = fs.readFileSync(usageFile, 'utf-8');
-
-            try {
-                usageData = JSON.parse(usageData);
-            } catch (e) {
-                console.error('Usage data parse error (%s)', usageFile);
-                process.exit(2);
-            }
-        }
-
-        readFromStream(inputStream, function(source) {
-            var time = process.hrtime();
-            var mem = process.memoryUsage().heapUsed;
-            var sourceMap = resolveSourceMap(source, inputMap, map, inputFile, outputFile);
-            var sourceMapAnnotation = '';
-            var result;
-
-            // main action
-            try {
-                var minifyFunc = declarationList ? csso.minifyBlock : csso.minify;
-                result = minifyFunc(source, {
-                    filename: inputFile,
-                    sourceMap: sourceMap.output,
-                    usage: usageData,
-                    restructure: !structureOptimisationOff,
-                    comments: comments,
-                    debug: debug
-                });
-
-                // for backward capability minify returns a string
-                if (typeof result === 'string') {
-                    result = {
-                        css: result,
-                        map: null
-                    };
-                }
-            } catch (e) {
-                if (e.parseError) {
-                    showParseError(source, inputFile, e.parseError, e.message);
-                    if (!debug) {
-                        process.exit(2);
-                    }
-                }
-
-                throw e;
-            }
-
-            if (sourceMap.output && result.map) {
-                // apply input map
-                if (sourceMap.input) {
-                    result.map.applySourceMap(
-                        new SourceMapConsumer(sourceMap.input),
-                        inputFile
-                    );
-                }
-
-                // add source map to result
-                if (sourceMap.outputFile) {
-                    // write source map to file
-                    fs.writeFileSync(sourceMap.outputFile, result.map.toString(), 'utf-8');
-                    sourceMapAnnotation = '\n' +
-                        '/*# sourceMappingURL=' +
-                        path.relative(outputFile ? path.dirname(outputFile) : process.cwd(), sourceMap.outputFile) +
-                        ' */';
-                } else {
-                    // inline source map
-                    sourceMapAnnotation = '\n' +
-                        '/*# sourceMappingURL=data:application/json;base64,' +
-                        new Buffer(result.map.toString()).toString('base64') +
-                        ' */';
-                }
-
-                result.css += sourceMapAnnotation;
-            }
-
-            // output result
-            if (outputFile) {
-                fs.writeFileSync(outputFile, result.css, 'utf-8');
-            } else {
-                console.log(result.css);
-            }
-
-            // output statistics
-            if (statistics) {
-                var timeDiff = process.hrtime(time);
-                showStat(
-                    path.relative(process.cwd(), inputFile),
-                    source.length,
-                    result.css.length,
-                    sourceMap.inputFile,
-                    sourceMapAnnotation.length,
-                    parseInt(timeDiff[0] * 1e3 + timeDiff[1] / 1e6, 10),
-                    process.memoryUsage().heapUsed - mem
-                );
-            }
-        });
     });
 
 module.exports = {
