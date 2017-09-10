@@ -194,6 +194,7 @@ var command = cli.create('csso', '[input] [output]')
     .option('-u, --usage <filename>', 'Usage data file')
     .option('--input-map <source>', 'Input source map: none, auto (default) or <filename>', 'auto')
     .option('--restructure-off', 'Turns structure minimization off')
+    .option('--declaration-list', 'Treats input as declaration list')
     .option('--comments <value>', 'Comments to keep: exclamation (default), first-exclamation or none', 'exclamation')
     .option('--stat', 'Output statistics in stderr')
     .option('--debug [level]', 'Output intermediate state of CSS during compression', debugLevel, 0)
@@ -207,6 +208,7 @@ var command = cli.create('csso', '[input] [output]')
         var map = options.map;
         var inputMap = options.inputMap;
         var structureOptimisationOff = options.restructureOff;
+        var declarationList = options.declarationList;
         var comments = processCommentsOption(options.comments);
         var debug = options.debug;
         var statistics = options.stat;
@@ -265,7 +267,8 @@ var command = cli.create('csso', '[input] [output]')
 
                 // main action
                 try {
-                    result = csso.minify(source, {
+                    var minifyFunc = declarationList ? csso.minifyBlock : csso.minify;
+                    result = minifyFunc(source, {
                         filename: inputFile,
                         sourceMap: sourceMap.output,
                         usage: usageData,
