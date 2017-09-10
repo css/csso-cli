@@ -31,6 +31,7 @@ Options:
 
       --comments <value>    Comments to keep: exclamation (default), first-exclamation or none
       --debug [level]       Output intermediate state of CSS during compression
+      --declaration-list    Treats input as declaration list
   -h, --help                Output usage information
   -i, --input <filename>    Input file
       --input-map <source>  Input source map: none, auto (default) or <filename>
