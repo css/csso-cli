@@ -192,8 +192,9 @@ function processOptions(options, args) {
     var usageData = false;
     var map = options.map;
     var inputMap = options.inputMap;
-    var restructure = !options.restructureOff;
     var declarationList = options.declarationList;
+    var restructure = !options.restructureOff;
+    var forceMediaMerge = Boolean(options.forceMediaMerge);
     var comments = processCommentsOption(options.comments);
     var debug = options.debug;
     var statistics = options.stat;
@@ -235,8 +236,9 @@ function processOptions(options, args) {
         usageData: usageFile,
         map: map,
         inputMap: inputMap,
-        restructure: restructure,
         declarationList: declarationList,
+        restructure: restructure,
+        forceMediaMerge: forceMediaMerge,
         comments: comments,
         statistics: statistics,
         debug: debug,
@@ -264,6 +266,7 @@ function minifyStream(options) {
                 sourceMap: sourceMap.output,
                 usage: options.usageData,
                 restructure: options.restructure,
+                forceMediaMerge: options.forceMediaMerge,
                 comments: options.comments,
                 debug: options.debug
             });
@@ -344,8 +347,9 @@ var command = cli.create('csso', '[input] [output]')
     .option('-m, --map <destination>', 'Generate source map: none (default), inline, file or <filename>', 'none')
     .option('-u, --usage <filename>', 'Usage data file')
     .option('--input-map <source>', 'Input source map: none, auto (default) or <filename>', 'auto')
-    .option('--restructure-off', 'Turns structure minimization off')
     .option('--declaration-list', 'Treat input as a declaration list')
+    .option('--restructure-off', 'Turns structure minimization off')
+    .option('--force-media-merge', 'Enables unsafe merge of @media rules')
     .option('--comments <value>', 'Comments to keep: exclamation (default), first-exclamation or none', 'exclamation')
     .option('--stat', 'Output statistics in stderr')
     .option('--debug [level]', 'Output intermediate state of CSS during compression', debugLevel, 0)
