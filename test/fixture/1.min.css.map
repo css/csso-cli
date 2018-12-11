@@ -1,0 +1,1 @@
+{"version":3,"sources":["test/fixture/1.css"],"names":[],"mappings":"AACA,I,CADA,I,CAAO,S","file":"test/fixture/1.css","sourcesContent":[".foo { color: #ff0000; }\n.bar { color: rgba(255, 0, 0, 1); }"]}

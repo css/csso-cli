@@ -254,6 +254,7 @@ function minifyStream(options) {
     readFromStream(inputStream, function(source) {
         var time = process.hrtime();
         var mem = process.memoryUsage().heapUsed;
+        var relInputFilename = path.relative(process.cwd(), options.inputFile);
         var sourceMap = resolveSourceMap(source, options.inputMap, options.map, options.inputFile, options.outputFile);
         var sourceMapAnnotation = '';
         var result;
@@ -262,7 +263,7 @@ function minifyStream(options) {
         try {
             var minifyFunc = options.declarationList ? csso.minifyBlock : csso.minify;
             result = minifyFunc(source, {
-                filename: options.inputFile,
+                filename: relInputFilename,
                 sourceMap: sourceMap.output,
                 usage: options.usageData,
                 restructure: options.restructure,
@@ -294,7 +295,7 @@ function minifyStream(options) {
             if (sourceMap.input) {
                 result.map.applySourceMap(
                     new SourceMapConsumer(sourceMap.input),
-                    options.inputFile
+                    relInputFilename
                 );
             }
 
@@ -328,7 +329,7 @@ function minifyStream(options) {
         if (options.statistics) {
             var timeDiff = process.hrtime(time);
             showStat(
-                path.relative(process.cwd(), options.inputFile),
+                relInputFilename,
                 source.length,
                 result.css.length,
                 sourceMap.inputFile,

@@ -60,3 +60,13 @@ it('should read from file', function() {
     return run(__dirname + '/fixture/1.css')
         .output(fs.readFileSync(__dirname + '/fixture/1.min.css', 'utf-8') + '\n');
 });
+
+it('should use relative paths in source map', function() {
+    return run(__dirname + '/fixture/1.css', '--map', 'inline')
+        .output(function(res) {
+            var expected = fs.readFileSync(__dirname + '/fixture/1.min.css.map', 'utf-8');
+            var actual = Buffer.from(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8') + '\n';
+
+            assert.equal(actual, expected);
+        });
+});
