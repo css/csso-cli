@@ -53,20 +53,25 @@ it('should output version', function() {
 it('should read content from stdin if no file specified', function() {
     return run()
         .input(fs.readFileSync(__dirname + '/fixture/1.css', 'utf-8'))
-        .output(fs.readFileSync(__dirname + '/fixture/1.min.css', 'utf-8') + '\n');
+        .output(fs.readFileSync(__dirname + '/fixture/1.min.css', 'utf-8'));
 });
 
 it('should read from file', function() {
     return run(__dirname + '/fixture/1.css')
-        .output(fs.readFileSync(__dirname + '/fixture/1.min.css', 'utf-8') + '\n');
+        .output(fs.readFileSync(__dirname + '/fixture/1.min.css', 'utf-8'));
 });
 
 it('should use relative paths in source map', function() {
     return run(__dirname + '/fixture/1.css', '--map', 'inline')
         .output(function(res) {
             var expected = fs.readFileSync(__dirname + '/fixture/1.min.css.map', 'utf-8');
-            var actual = Buffer.from(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8') + '\n';
+            var actual = new Buffer(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8') + '\n';
 
             assert.equal(actual, expected);
         });
+});
+
+it('should disable structure optimisations with --no-restructure option', function() {
+    return run(__dirname + '/fixture/1.css', '--no-restructure')
+        .output(fs.readFileSync(__dirname + '/fixture/1-no-restructure.min.css', 'utf-8'));
 });

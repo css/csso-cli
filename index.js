@@ -193,7 +193,7 @@ function processOptions(options, args) {
     var map = options.map;
     var inputMap = options.inputMap;
     var declarationList = options.declarationList;
-    var restructure = !options.restructureOff;
+    var restructure = Boolean(options.restructure);
     var forceMediaMerge = Boolean(options.forceMediaMerge);
     var comments = processCommentsOption(options.comments);
     var debug = options.debug;
@@ -349,11 +349,11 @@ var command = cli.create('csso', '[input] [output]')
     .option('-u, --usage <filename>', 'Usage data file')
     .option('--input-map <source>', 'Input source map: none, auto (default) or <filename>', 'auto')
     .option('-d, --declaration-list', 'Treat input as a declaration list')
-    .option('--restructure-off', 'Turns structure minimization off')
-    .option('--force-media-merge', 'Enables unsafe merge of @media rules')
+    .option('--no-restructure', 'Disable structural optimisations')
+    .option('--force-media-merge', 'Enable unsafe merge of @media rules')
     .option('--comments <value>', 'Comments to keep: exclamation (default), first-exclamation or none', 'exclamation')
     .option('--stat', 'Output statistics in stderr')
-    .option('--debug [level]', 'Output intermediate state of CSS during compression', debugLevel, 0)
+    .option('--debug [level]', 'Output intermediate state of CSS during a compression', debugLevel, 0)
     .option('--watch', 'Watch source file for changes')
     .action(function(args) {
         var options = processOptions(this.values, args);
