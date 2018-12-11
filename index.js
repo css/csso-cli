@@ -187,7 +187,7 @@ function processCommentsOption(value) {
 
 function processOptions(options, args) {
     var inputFile = options.input || args[0];
-    var outputFile = options.output || args[1];
+    var outputFile = options.output;
     var usageFile = options.usage;
     var usageData = false;
     var sourceMap = options.sourceMap;
@@ -347,7 +347,7 @@ function minifyStream(options) {
     });
 }
 
-var command = cli.create('csso', '[input] [output]')
+var command = cli.create('csso', '[input]')
     .version(require('csso/package.json').version)
     .option('-i, --input <filename>', 'Input file')
     .option('-o, --output <filename>', 'Output file (result outputs to stdout if not set)')

@@ -25,7 +25,7 @@ npm install -g csso-cli
 ## Usage
 
 ```
-csso [input] [output] [options]
+csso [input] [options]
 
 Options:
 

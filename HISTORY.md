@@ -2,9 +2,10 @@
 
 - Changed used path to a file in generated source map to relative path (#7)
 - Renamed options
-  - `--restructure-off` to `--no-restructure`
-  - `--map` to `--source-map`
-  - `--input-map` to `--input-source-map`
+    - `--restructure-off` to `--no-restructure`
+    - `--map` to `--source-map`
+    - `--input-map` to `--input-source-map`
+- Removed setting output file with no option label, i.e. `--output` is required
 
 ## 1.1.0 (September 10, 2017)
 
