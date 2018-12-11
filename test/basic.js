@@ -8,9 +8,11 @@ var cmd = 'node';
 function run() {
     var args = [path.join(__dirname, '../bin/csso')].concat(Array.prototype.slice.call(arguments));
     var proc = child.spawn(cmd, args, { stdio: 'pipe' });
-    var resolve;
-    var wrapper = new Promise(function(_resolve) {
-        resolve = _resolve;
+    var error = '';
+    var wrapper = new Promise(function(resolve, reject) {
+        proc.once('exit', function(code) {
+            code ? reject(new Error(error)) : resolve();
+        });
     });
 
     wrapper.input = function(data) {
@@ -37,8 +39,8 @@ function run() {
         return wrapper;
     };
 
-    proc.once('exit', function() {
-        resolve();
+    proc.stderr.once('data', function(data) {
+        error += data;
     });
 
     return wrapper;
@@ -62,7 +64,7 @@ it('should read from file', function() {
 });
 
 it('should use relative paths in source map', function() {
-    return run(__dirname + '/fixture/1.css', '--map', 'inline')
+    return run(__dirname + '/fixture/1.css', '--source-map', 'inline')
         .output(function(res) {
             var expected = fs.readFileSync(__dirname + '/fixture/1.min.css.map', 'utf-8');
             var actual = new Buffer(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8') + '\n';

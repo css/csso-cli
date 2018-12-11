@@ -1,6 +1,10 @@
 ## next
 
 - Changed used path to a file in generated source map to relative path (#7)
+- Renamed options
+  - `--restructure-off` to `--no-restructure`
+  - `--map` to `--source-map`
+  - `--input-map` to `--input-source-map`
 
 ## 1.1.0 (September 10, 2017)
 

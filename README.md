@@ -29,20 +29,20 @@ csso [input] [output] [options]
 
 Options:
 
-      --comments <value>    Comments to keep: exclamation (default), first-exclamation or none
-      --debug [level]       Output intermediate state of CSS during a compression
-  -d, --declaration-list    Treat input as a declaration list
-      --force-media-merge   Enable unsafe merge of @media rules
-  -h, --help                Output usage information
-  -i, --input <filename>    Input file
-      --input-map <source>  Input source map: none, auto (default) or <filename>
-  -m, --map <destination>   Generate source map: none (default), inline, file or <filename>
-      --no-restructure      Disable structural optimisations
-  -o, --output <filename>   Output file (result outputs to stdout if not set)
-      --stat                Output statistics in stderr
-  -u, --usage <filename>    Usage data file
-  -v, --version             Output version
-      --watch               Watch source file for changes
+      --comments <value>           Comments to keep: exclamation (default), first-exclamation or none
+      --debug [level]              Output intermediate state of CSS during a compression
+  -d, --declaration-list           Treat input as a declaration list
+      --force-media-merge          Enable unsafe merge of @media rules
+  -h, --help                       Output usage information
+  -i, --input <filename>           Input file
+      --input-source-map <source>  Input source map: none, auto (default) or <filename>
+      --no-restructure             Disable structural optimisations
+  -o, --output <filename>          Output file (result outputs to stdout if not set)
+  -s, --source-map <destination>   Generate source map: none (default), inline, file or <filename>
+      --stat                       Output statistics in stderr
+  -u, --usage <filename>           Usage data file
+  -v, --version                    Output version
+      --watch                      Watch source file for changes
 ```
 
 Some examples:

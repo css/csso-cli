@@ -190,8 +190,8 @@ function processOptions(options, args) {
     var outputFile = options.output || args[1];
     var usageFile = options.usage;
     var usageData = false;
-    var map = options.map;
-    var inputMap = options.inputMap;
+    var sourceMap = options.sourceMap;
+    var inputSourceMap = options.inputSourceMap;
     var declarationList = options.declarationList;
     var restructure = Boolean(options.restructure);
     var forceMediaMerge = Boolean(options.forceMediaMerge);
@@ -234,8 +234,8 @@ function processOptions(options, args) {
         inputFile: inputFile,
         outputFile: outputFile,
         usageData: usageFile,
-        map: map,
-        inputMap: inputMap,
+        sourceMap: sourceMap,
+        inputSourceMap: inputSourceMap,
         declarationList: declarationList,
         restructure: restructure,
         forceMediaMerge: forceMediaMerge,
@@ -255,7 +255,13 @@ function minifyStream(options) {
         var time = process.hrtime();
         var mem = process.memoryUsage().heapUsed;
         var relInputFilename = path.relative(process.cwd(), options.inputFile);
-        var sourceMap = resolveSourceMap(source, options.inputMap, options.map, options.inputFile, options.outputFile);
+        var sourceMap = resolveSourceMap(
+            source,
+            options.inputSourceMap,
+            options.sourceMap,
+            options.inputFile,
+            options.outputFile
+        );
         var sourceMapAnnotation = '';
         var result;
 
@@ -345,9 +351,9 @@ var command = cli.create('csso', '[input] [output]')
     .version(require('csso/package.json').version)
     .option('-i, --input <filename>', 'Input file')
     .option('-o, --output <filename>', 'Output file (result outputs to stdout if not set)')
-    .option('-m, --map <destination>', 'Generate source map: none (default), inline, file or <filename>', 'none')
+    .option('-s, --source-map <destination>', 'Generate source map: none (default), inline, file or <filename>', 'none')
     .option('-u, --usage <filename>', 'Usage data file')
-    .option('--input-map <source>', 'Input source map: none, auto (default) or <filename>', 'auto')
+    .option('--input-source-map <source>', 'Input source map: none, auto (default) or <filename>', 'auto')
     .option('-d, --declaration-list', 'Treat input as a declaration list')
     .option('--no-restructure', 'Disable structural optimisations')
     .option('--force-media-merge', 'Enable unsafe merge of @media rules')
