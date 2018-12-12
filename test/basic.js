@@ -1,8 +1,9 @@
-var assert = require('assert');
-var path = require('path');
-var fs = require('fs');
-var child = require('child_process');
-var cmd = 'node';
+/* eslint-env mocha */
+
+const assert = require('assert');
+const child = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 function fixturePath(filepath) {
     return path.join(__dirname, 'fixture', filepath);
@@ -12,31 +13,37 @@ function fixtureContent(filepath) {
     return fs.readFileSync(fixturePath(filepath), 'utf-8').trim();
 }
 
-function run() {
-    var args = [path.join(__dirname, '../bin/csso')].concat(Array.prototype.slice.call(arguments));
-    var proc = child.spawn(cmd, args, { stdio: 'pipe' });
-    var error = '';
-    var wrapper = new Promise(function(resolve, reject) {
-        proc.once('exit', function(code) {
-            code ? reject(new Error(error)) : resolve();
+function run(...args) {
+    const proc = child.spawn('node', [
+        path.join(__dirname, '../bin/csso'),
+        ...args
+    ], { stdio: 'pipe' });
+    let error = '';
+    const wrapper = new Promise((resolve, reject) => {
+        proc.once('exit', code => {
+            if (code) {
+                reject(new Error(error));
+            } else {
+                resolve();
+            }
         });
     });
 
-    wrapper.input = function(data) {
+    wrapper.input = data => {
         proc.stdin.write(data);
         proc.stdin.end();
         return wrapper;
     };
 
-    wrapper.output = function(expected) {
-        var buffer = [];
+    wrapper.output = expected => {
+        const buffer = [];
 
         proc.stdout
-            .on('data', function(chunk) {
+            .on('data', chunk => {
                 buffer.push(chunk);
             })
-            .on('end', function() {
-                var data = buffer.join('').trim();
+            .on('end', () => {
+                const data = buffer.join('').trim();
 
                 switch (typeof expected) {
                     case 'function':
@@ -44,116 +51,116 @@ function run() {
                         break;
 
                     default:
-                        assert.equal(data, expected);
+                        assert.strictEqual(data, expected);
                 }
             });
         return wrapper;
     };
 
-    proc.stderr.once('data', function(data) {
+    proc.stderr.once('data', data => {
         error += data;
     });
 
     return wrapper;
 }
 
-it('should output version', function() {
+it('should output version', () => {
     return run('-v')
         .output(require('csso/package.json').version);
 });
 
-it('should read content from stdin if no file specified', function() {
+it('should read content from stdin if no file specified', () => {
     return run()
         .input(fixtureContent('1.css'))
         .output(fixtureContent('1.min.css'));
 });
 
-it('should read from file', function() {
+it('should read from file', () => {
     return run(fixturePath('1.css'))
         .output(fixtureContent('1.min.css'));
 });
 
-it('--source-map inline', function() {
+it('--source-map inline', () => {
     return run(fixturePath('1.css'), '--source-map', 'inline')
-        .output(function(res) {
-            var expected = fixtureContent('1.min.css.map');
-            var actual = Buffer.from(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8');
+        .output(res => {
+            const expected = fixtureContent('1.min.css.map');
+            const actual = Buffer.from(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8');
 
-            assert.equal(actual, expected);
+            assert.strictEqual(actual, expected);
         });
 });
 
-it('--source-map file', function() {
+it('--source-map file', () => {
     return run(
         fixturePath('1.css'),
         '--source-map', 'file',
         '--output', fixturePath('write-hack/1-source-map-file.min.css')
-    ).then(function() {
-        assert.equal(
+    ).then(() => {
+        assert.strictEqual(
             fixtureContent('write-hack/1-source-map-file.min.css'),
             fixtureContent('1-source-map-file.min.css')
         );
-        assert.equal(
+        assert.strictEqual(
             fixtureContent('write-hack/1-source-map-file.min.css.map'),
             fixtureContent('1-source-map-file.min.css.map')
         );
     });
 });
 
-it('--source-map <filepath>', function() {
+it('--source-map <filepath>', () => {
     return run(
         fixturePath('1.css'),
         '--source-map', fixturePath('write-hack/1-source-map-file.min.css.map')
-    ).output(function(res) {
-        assert.equal(
+    ).output(res => {
+        assert.strictEqual(
             res,
             fixtureContent('1-source-map-filepath.min.css')
         );
-        assert.equal(
+        assert.strictEqual(
             fixtureContent('write-hack/1-source-map-file.min.css.map'),
             fixtureContent('1-source-map-file.min.css.map')
         );
     });
 });
 
-it('should fetch a source map from a comment in source file', function() {
+it('should fetch a source map from a comment in source file', () => {
     return run(
         fixturePath('bootstrap-grid-source-map-filepath.css'),
         '--source-map', fixturePath('write-hack/bootstrap-grid-source-map-filepath.min.css.map')
-    ).output(function(res) {
-        assert.equal(
+    ).output(res => {
+        assert.strictEqual(
             res,
             fixtureContent('bootstrap-grid-source-map-filepath.min.css')
         );
-        assert.equal(
+        assert.strictEqual(
             fixtureContent('write-hack/bootstrap-grid-source-map-filepath.min.css.map'),
             fixtureContent('bootstrap-grid-source-map-filepath.min.css.map')
         );
     });
 });
 
-it('should fetch a source map from a file with .map extension', function() {
+it('should fetch a source map from a file with .map extension', () => {
     return run(
         fixturePath('bootstrap-grid.css'),
         '--source-map', fixturePath('write-hack/bootstrap-grid.min.css.map')
-    ).output(function(res) {
-        assert.equal(
+    ).output(res => {
+        assert.strictEqual(
             res,
             fixtureContent('bootstrap-grid.min.css')
         );
-        assert.equal(
+        assert.strictEqual(
             fixtureContent('write-hack/bootstrap-grid.min.css.map'),
             fixtureContent('bootstrap-grid.min.css.map')
         );
     });
 });
 
-it('should disable structure optimisations with --no-restructure option', function() {
+it('should disable structure optimisations with --no-restructure option', () => {
     return run(fixturePath('1.css'), '--no-restructure')
         .output(fixtureContent('1-no-restructure.min.css'));
 });
 
-it('should use usage data', function() {
+it('should use usage data', () => {
     return run(fixturePath('usage.css'), '--usage', fixturePath('usage.css.json'))
         .output(fixtureContent('usage.min.css'));
 });

@@ -1,36 +1,37 @@
-var fs = require('fs');
-var path = require('path');
-var cli = require('clap');
-var csso = require('csso');
-var SourceMapConsumer = require('source-map').SourceMapConsumer;
+const fs = require('fs');
+const path = require('path');
+const cli = require('clap');
+const csso = require('csso');
+const { SourceMapConsumer } = require('source-map');
 
 function unixPathname(pathname) {
     return pathname.replace(/\\/g, '/');
 }
 
 function readFromStream(stream, minify) {
-    var buffer = [];
+    const buffer = [];
 
     stream
         .setEncoding('utf8')
-        .on('data', function(chunk) {
+        .on('data', chunk => {
             buffer.push(chunk);
         })
-        .on('end', function() {
+        .on('end', () => {
             minify(buffer.join(''));
         });
 }
 
-function showStat(filename, source, result, inputMap, map, time, mem) {
-    function fmt(size) {
-        return String(size).split('').reverse().reduce(function(size, digit, idx) {
-            if (idx && idx % 3 === 0) {
-                size = ' ' + size;
-            }
-            return digit + size;
-        }, '');
-    }
+function fmt(size) {
+    return String(size).split('').reverse().reduce((size, digit, idx) => {
+        if (idx && idx % 3 === 0) {
+            size = ` ${size}`;
+        }
 
+        return digit + size;
+    }, '');
+}
+
+function showStat(filename, source, result, inputMap, map, time, mem) {
     map = map || 0;
     result -= map;
 
@@ -38,40 +39,41 @@ function showStat(filename, source, result, inputMap, map, time, mem) {
     if (inputMap) {
         console.error('Map source:', inputMap);
     }
+
     console.error('Original:  ', fmt(source), 'bytes');
-    console.error('Compressed:', fmt(result), 'bytes', '(' + (100 * result / source).toFixed(2) + '%)');
-    console.error('Saving:    ', fmt(source - result), 'bytes', '(' + (100 * (source - result) / source).toFixed(2) + '%)');
+    console.error('Compressed:', fmt(result), 'bytes', `(${(100 * result / source).toFixed(2)}%)`);
+    console.error('Saving:    ', fmt(source - result), 'bytes', `(${(100 * (source - result) / source).toFixed(2)}%)`);
     if (map) {
-        console.error('Source map:', fmt(map), 'bytes', '(' + (100 * map / (result + map)).toFixed(2) + '% of total)');
+        console.error('Source map:', fmt(map), 'bytes', `(${(100 * map / (result + map)).toFixed(2)}% of total)`);
         console.error('Total:     ', fmt(map + result), 'bytes');
     }
+
     console.error('Time:      ', time, 'ms');
     console.error('Memory:    ', (mem / (1024 * 1024)).toFixed(3), 'MB');
 }
 
 function showParseError(source, filename, details, message) {
     function processLines(start, end) {
-        return lines.slice(start, end).map(function(line, idx) {
-            var num = String(start + idx + 1);
+        return lines.slice(start, end).map((line, idx) => {
+            let num = String(start + idx + 1);
 
             while (num.length < maxNumLength) {
-                num = ' ' + num;
+                num = ` ${num}`;
             }
 
-            return num + ' |' + line;
+            return `${num} |${line}`;
         }).join('\n');
     }
 
-    var lines = source.split(/\n|\r\n?|\f/);
-    var column = details.column;
-    var line = details.line;
-    var startLine = Math.max(1, line - 2);
-    var endLine = Math.min(line + 2, lines.length + 1);
-    var maxNumLength = Math.max(4, String(endLine).length) + 1;
+    const lines = source.split(/\n|\r\n?|\f/);
+    const { column, line } = details;
+    const startLine = Math.max(1, line - 2);
+    const endLine = Math.min(line + 2, lines.length + 1);
+    const maxNumLength = Math.max(4, String(endLine).length) + 1;
 
-    console.error('\nParse error ' + filename + ': ' + message);
+    console.error(`\nParse error ${filename}: ${message}`);
     console.error(processLines(startLine - 1, line));
-    console.error(new Array(column + maxNumLength + 2).join('-') + '^');
+    console.error(`${new Array(column + maxNumLength + 2).join('-')}^`);
     console.error(processLines(line, endLine));
     console.error();
 }
@@ -82,9 +84,9 @@ function debugLevel(level) {
 }
 
 function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
-    var inputMapContent = null;
-    var inputMapFile = null;
-    var outputMapFile = null;
+    let inputMapContent = null;
+    let inputMapFile = null;
+    let outputMapFile = null;
 
     switch (outputMap) {
         case 'none':
@@ -103,7 +105,7 @@ function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
                 process.exit(2);
             }
 
-            outputMapFile = outputFile + '.map';
+            outputMapFile = `${outputFile}.map`;
             break;
 
         default:
@@ -128,7 +130,7 @@ function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
         case 'auto':
             if (outputMap) {
                 // try fetch source map from source
-                var inputMapComment = source.match(/\/\*# sourceMappingURL=(\S+)\s*\*\/\s*$/);
+                let inputMapComment = source.match(/\/\*# sourceMappingURL=(\S+)\s*\*\/\s*$/);
 
                 if (inputFile === '<stdin>') {
                     inputFile = false;
@@ -141,20 +143,16 @@ function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
                     if (inputMapComment.substr(0, 5) === 'data:') {
                         // decode source map content from comment
                         inputMapContent = Buffer.from(inputMapComment.substr(inputMapComment.indexOf('base64,') + 7), 'base64').toString();
-                    } else {
-                        // value is filename – resolve it as absolute path
-                        if (inputFile) {
-                            inputMapFile = path.resolve(path.dirname(inputFile), inputMapComment);
-                        }
+                    // value is filename – resolve it as absolute path
+                    } else if (inputFile) {
+                        inputMapFile = path.resolve(path.dirname(inputFile), inputMapComment);
                     }
-                } else {
-                    // comment doesn't found - look up file with `.map` extension nearby input file
-                    if (inputFile && fs.existsSync(inputFile + '.map')) {
-                        inputMapFile = inputFile + '.map';
-                    }
+                // comment wasn't found - look up file with `.map` extension nearby input file
+                } else if (inputFile && fs.existsSync(`${inputFile}.map`)) {
+                    inputMapFile = `${inputFile}.map`;
                 }
-
             }
+
             break;
 
         default:
@@ -189,19 +187,21 @@ function processCommentsOption(value) {
 }
 
 function processOptions(options, args) {
-    var inputFile = options.input || args[0];
-    var outputFile = options.output;
-    var usageFile = options.usage;
-    var usageData = false;
-    var sourceMap = options.sourceMap;
-    var inputSourceMap = options.inputSourceMap;
-    var declarationList = options.declarationList;
-    var restructure = Boolean(options.restructure);
-    var forceMediaMerge = Boolean(options.forceMediaMerge);
-    var comments = processCommentsOption(options.comments);
-    var debug = options.debug;
-    var statistics = options.stat;
-    var watch = options.watch;
+    let inputFile = options.input || args[0];
+    let outputFile = options.output;
+    const {
+        usage: usageFile,
+        sourceMap,
+        inputSourceMap,
+        declarationList,
+        debug,
+        stat: statistics,
+        watch
+    } = options;
+    const restructure = Boolean(options.restructure);
+    const forceMediaMerge = Boolean(options.forceMediaMerge);
+    const comments = processCommentsOption(options.comments);
+    let usageData = false;
 
     if (process.stdin.isTTY && !inputFile && !outputFile) {
         return null;
@@ -227,50 +227,50 @@ function processOptions(options, args) {
 
         try {
             usageData = JSON.parse(usageData);
-        } catch (e) {
+        } catch (error) {
             console.error('Usage data parse error (%s)', usageFile);
             process.exit(2);
         }
     }
 
     return {
-        inputFile: inputFile,
-        outputFile: outputFile,
-        usageData: usageData,
-        sourceMap: sourceMap,
-        inputSourceMap: inputSourceMap,
-        declarationList: declarationList,
-        restructure: restructure,
-        forceMediaMerge: forceMediaMerge,
-        comments: comments,
-        statistics: statistics,
-        debug: debug,
-        watch: watch
+        inputFile,
+        outputFile,
+        usageData,
+        sourceMap,
+        inputSourceMap,
+        declarationList,
+        restructure,
+        forceMediaMerge,
+        comments,
+        statistics,
+        debug,
+        watch
     };
 }
 
 function minifyStream(options) {
-    var inputStream = options.inputFile !== '<stdin>'
-        ? fs.createReadStream(options.inputFile)
-        : process.stdin;
+    const inputStream = options.inputFile !== '<stdin>' ?
+        fs.createReadStream(options.inputFile) :
+        process.stdin;
 
-    readFromStream(inputStream, function(source) {
-        var time = process.hrtime();
-        var mem = process.memoryUsage().heapUsed;
-        var relInputFilename = path.relative(process.cwd(), options.inputFile);
-        var sourceMap = resolveSourceMap(
+    readFromStream(inputStream, source => {
+        const time = process.hrtime();
+        const mem = process.memoryUsage().heapUsed;
+        const relInputFilename = path.relative(process.cwd(), options.inputFile);
+        const sourceMap = resolveSourceMap(
             source,
             options.inputSourceMap,
             options.sourceMap,
             options.inputFile,
             options.outputFile
         );
-        var sourceMapAnnotation = '';
-        var result;
+        let sourceMapAnnotation = '';
+        let result;
 
         // main action
         try {
-            var minifyFunc = options.declarationList ? csso.minifyBlock : csso.minify;
+            const minifyFunc = options.declarationList ? csso.minifyBlock : csso.minify;
             result = minifyFunc(source, {
                 filename: unixPathname(relInputFilename),
                 sourceMap: Boolean(sourceMap.output),
@@ -288,15 +288,15 @@ function minifyStream(options) {
                     map: null
                 };
             }
-        } catch (e) {
-            if (e.parseError) {
-                showParseError(source, options.inputFile, e.parseError, e.message);
+        } catch (error) {
+            if (error.parseError) {
+                showParseError(source, options.inputFile, error.parseError, error.message);
                 if (!options.debug) {
                     process.exit(2);
                 }
             }
 
-            throw e;
+            throw error;
         }
 
         if (sourceMap.output && result.map) {
@@ -336,21 +336,21 @@ function minifyStream(options) {
 
         // output statistics
         if (options.statistics) {
-            var timeDiff = process.hrtime(time);
+            const timeDiff = process.hrtime(time);
             showStat(
                 relInputFilename,
                 source.length,
                 result.css.length,
                 sourceMap.inputFile,
                 sourceMapAnnotation.length,
-                parseInt(timeDiff[0] * 1e3 + timeDiff[1] / 1e6, 10),
+                parseInt((timeDiff[0] * 1e3) + (timeDiff[1] / 1e6), 10),
                 process.memoryUsage().heapUsed - mem
             );
         }
     });
 }
 
-var command = cli.create('csso', '[input]')
+const command = cli.create('csso', '[input]')
     .version(require('csso/package.json').version)
     .option('-i, --input <filename>', 'Input file')
     .option('-o, --output <filename>', 'Output file (result outputs to stdout if not set)')
@@ -365,7 +365,7 @@ var command = cli.create('csso', '[input]')
     .option('--debug [level]', 'Output intermediate state of CSS during a compression', debugLevel, 0)
     .option('--watch', 'Watch source file for changes')
     .action(function(args) {
-        var options = processOptions(this.values, args);
+        const options = processOptions(this.values, args);
 
         if (options === null) {
             this.showHelp();
@@ -378,7 +378,7 @@ var command = cli.create('csso', '[input]')
         if (options.watch && options.inputFile !== '<stdin>') {
             // NOTE: require chokidar here to keep down start up time when --watch doesn't use
             // (yep, chokidar adds a penalty ~0.2-0.3s on its init)
-            require('chokidar').watch(options.inputFile).on('change', function() {
+            require('chokidar').watch(options.inputFile).on('change', () => {
                 minifyStream(options);
             });
         }
@@ -386,7 +386,7 @@ var command = cli.create('csso', '[input]')
 
 module.exports = {
     run: command.run.bind(command),
-    isCliError: function(err) {
+    isCliError(err) {
         return err instanceof cli.Error;
     }
 };

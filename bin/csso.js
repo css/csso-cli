@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
-var cli = require('../index.js');
+const cli = require('..');
 
 try {
     cli.run();
-} catch (e) {
+} catch (error) {
     // output user frendly message if cli error
-    if (cli.isCliError(e)) {
-        console.error(e.message || e);
+    if (cli.isCliError(error)) {
+        console.error(error.message || error);
         process.exit(2);
     }
 
     // otherwise re-throw exception
-    throw e;
+    throw error;
 }

@@ -25,14 +25,13 @@
     "url": "https://github.com/css/csso-cli/issues"
   },
   "bin": {
-    "csso": "./bin/csso"
+    "csso": "./bin/csso.js"
   },
   "main": "./index",
   "scripts": {
-    "test": "mocha --reporter dot",
-    "codestyle": "eslint bin/* test index.js",
-    "codestyle-and-test": "npm run codestyle && npm test",
-    "travis": "npm run codestyle-and-test"
+    "lint": "eslint .",
+    "mocha": "mocha --reporter dot",
+    "test": "npm run lint && npm run mocha"
   },
   "dependencies": {
     "chokidar": "^2.0.0",
@@ -48,9 +47,7 @@
     "node": ">=6.14.0"
   },
   "files": [
-    "bin",
-    "index.js",
-    "LICENSE",
-    "README.md"
+    "bin/csso.js",
+    "index.js"
   ]
 }
