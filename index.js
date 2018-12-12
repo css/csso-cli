@@ -254,7 +254,7 @@ function minifyStream(options) {
     readFromStream(inputStream, function(source) {
         var time = process.hrtime();
         var mem = process.memoryUsage().heapUsed;
-        var relInputFilename = path.relative(process.cwd(), options.inputFile);
+        var relInputFilename = path.relative(process.cwd(), options.inputFile).replace(/\\/g, '/');
         var sourceMap = resolveSourceMap(
             source,
             options.inputSourceMap,
