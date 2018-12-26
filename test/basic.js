@@ -5,6 +5,14 @@ var child = require('child_process');
 var Promise = require('es6-promise-polyfill').Promise;
 var cmd = 'node';
 
+function fixturePath(filepath) {
+    return path.join(__dirname, 'fixture', filepath);
+}
+
+function fixtureContent(filepath) {
+    return fs.readFileSync(fixturePath(filepath), 'utf-8').trim();
+}
+
 function run() {
     var args = [path.join(__dirname, '../bin/csso')].concat(Array.prototype.slice.call(arguments));
     var proc = child.spawn(cmd, args, { stdio: 'pipe' });
@@ -21,19 +29,16 @@ function run() {
         return wrapper;
     };
 
-    wrapper.output = function(test) {
+    wrapper.output = function(expected) {
         proc.stdout.once('data', function(data) {
-            switch (typeof test) {
+            data = String(data).trim();
+            switch (typeof expected) {
                 case 'function':
-                    test(String(data));
-                    break;
-
-                case 'string':
-                    assert.equal(String(data), test);
+                    expected(data);
                     break;
 
                 default:
-                    assert.equal(data, test);
+                    assert.equal(data, expected);
             }
         });
         return wrapper;
@@ -48,32 +53,65 @@ function run() {
 
 it('should output version', function() {
     return run('-v').output(
-        require('csso/package.json').version + '\n'
+        require('csso/package.json').version
     );
 });
 
 it('should read content from stdin if no file specified', function() {
     return run()
-        .input(fs.readFileSync(__dirname + '/fixture/1.css', 'utf-8'))
-        .output(fs.readFileSync(__dirname + '/fixture/1.min.css', 'utf-8'));
+        .input(fixtureContent('1.css'))
+        .output(fixtureContent('1.min.css'));
 });
 
 it('should read from file', function() {
-    return run(__dirname + '/fixture/1.css')
-        .output(fs.readFileSync(__dirname + '/fixture/1.min.css', 'utf-8'));
+    return run(fixturePath('1.css'))
+        .output(fixtureContent('1.min.css'));
 });
 
-it('should use relative paths in source map', function() {
-    return run(__dirname + '/fixture/1.css', '--source-map', 'inline')
+it('--source-map inline', function() {
+    return run(fixturePath('1.css'), '--source-map', 'inline')
         .output(function(res) {
-            var expected = fs.readFileSync(__dirname + '/fixture/1.min.css.map', 'utf-8');
-            var actual = new Buffer(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8') + '\n';
+            var expected = fixtureContent('1.min.css.map');
+            var actual = new Buffer(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8');
 
             assert.equal(actual, expected);
         });
 });
 
+it('--source-map file', function() {
+    return run(
+            fixturePath('1.css'),
+            '--source-map', 'file',
+            '--output', fixturePath('write-hack/1-source-map-file.min.css')
+        ).then(() => {
+            assert.equal(
+                fixtureContent('write-hack/1-source-map-file.min.css'),
+                fixtureContent('1-source-map-file.min.css')
+            );
+            assert.equal(
+                fixtureContent('write-hack/1-source-map-file.min.css.map'),
+                fixtureContent('1-source-map-file.min.css.map')
+            );
+        });
+});
+
+it('--source-map <filepath>', function() {
+    return run(
+            fixturePath('1.css'),
+            '--source-map', fixturePath('write-hack/1-source-map-file.min.css.map')
+        ).output((res) => {
+            assert.equal(
+                res,
+                fixtureContent('1-source-map-filepath.min.css')
+            );
+            assert.equal(
+                fixtureContent('write-hack/1-source-map-file.min.css.map'),
+                fixtureContent('1-source-map-file.min.css.map')
+            );
+        });
+});
+
 it('should disable structure optimisations with --no-restructure option', function() {
-    return run(__dirname + '/fixture/1.css', '--no-restructure')
-        .output(fs.readFileSync(__dirname + '/fixture/1-no-restructure.min.css', 'utf-8'));
+    return run(fixturePath('1.css'), '--no-restructure')
+        .output(fixtureContent('1-no-restructure.min.css'));
 });

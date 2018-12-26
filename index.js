@@ -96,7 +96,7 @@ function resolveSourceMap(source, inputMap, map, inputFile, outputFile) {
 
         case 'file':
             if (!outputFile) {
-                console.error('Output filename should be specified when `--map file` is used');
+                console.error('Output filename should be specified when `--source-map file` is used');
                 process.exit(2);
             }
 
