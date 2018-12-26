@@ -4,6 +4,10 @@ var cli = require('clap');
 var csso = require('csso');
 var SourceMapConsumer = require('source-map').SourceMapConsumer;
 
+function unixPathname(pathname) {
+    return pathname.replace(/\\/g, '/');
+}
+
 function readFromStream(stream, minify) {
     var buffer = [];
 
@@ -78,15 +82,15 @@ function debugLevel(level) {
     return isNaN(level) ? 1 : Math.max(Number(level), 0);
 }
 
-function resolveSourceMap(source, inputMap, map, inputFile, outputFile) {
+function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
     var inputMapContent = null;
     var inputMapFile = null;
     var outputMapFile = null;
 
-    switch (map) {
+    switch (outputMap) {
         case 'none':
             // don't generate source map
-            map = false;
+            outputMap = false;
             inputMap = 'none';
             break;
 
@@ -105,15 +109,15 @@ function resolveSourceMap(source, inputMap, map, inputFile, outputFile) {
 
         default:
             // process filename
-            if (map) {
+            if (outputMap) {
                 // check path is reachable
-                if (!fs.existsSync(path.dirname(map))) {
-                    console.error('Directory for map file should exists:', path.dirname(path.resolve(map)));
+                if (!fs.existsSync(path.dirname(outputMap))) {
+                    console.error('Directory for map file should exists:', path.dirname(path.resolve(outputMap)));
                     process.exit(2);
                 }
 
                 // resolve to absolute path
-                outputMapFile = path.resolve(process.cwd(), map);
+                outputMapFile = path.resolve(process.cwd(), outputMap);
             }
     }
 
@@ -123,7 +127,7 @@ function resolveSourceMap(source, inputMap, map, inputFile, outputFile) {
             break;
 
         case 'auto':
-            if (map) {
+            if (outputMap) {
                 // try fetch source map from source
                 var inputMapComment = source.match(/\/\*# sourceMappingURL=(\S+)\s*\*\/\s*$/);
 
@@ -168,7 +172,7 @@ function resolveSourceMap(source, inputMap, map, inputFile, outputFile) {
     return {
         input: inputMapContent,
         inputFile: inputMapFile || (inputMapContent ? '<inline>' : false),
-        output: map,
+        output: outputMap,
         outputFile: outputMapFile
     };
 }
@@ -269,8 +273,8 @@ function minifyStream(options) {
         try {
             var minifyFunc = options.declarationList ? csso.minifyBlock : csso.minify;
             result = minifyFunc(source, {
-                filename: relInputFilename,
-                sourceMap: sourceMap.output,
+                filename: unixPathname(relInputFilename),
+                sourceMap: Boolean(sourceMap.output),
                 usage: options.usageData,
                 restructure: options.restructure,
                 forceMediaMerge: options.forceMediaMerge,
@@ -311,7 +315,7 @@ function minifyStream(options) {
                 fs.writeFileSync(sourceMap.outputFile, result.map.toString(), 'utf-8');
                 sourceMapAnnotation = '\n' +
                     '/*# sourceMappingURL=' +
-                    path.relative(options.outputFile ? path.dirname(options.outputFile) : process.cwd(), sourceMap.outputFile) +
+                    unixPathname(path.relative(options.outputFile ? path.dirname(options.outputFile) : process.cwd(), sourceMap.outputFile)) +
                     ' */';
             } else {
                 // inline source map
