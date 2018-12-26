@@ -1,3 +1,7 @@
+## 2.0.1 (December 26, 2018)
+
+- Fixed source map paths when perform on Windows platform (path should be in unix format)
+
 ## 2.0.0 (December 11, 2018)
 
 - Use relative paths to files in generated source map (#7)
