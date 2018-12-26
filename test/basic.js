@@ -83,7 +83,7 @@ it('--source-map file', function() {
             fixturePath('1.css'),
             '--source-map', 'file',
             '--output', fixturePath('write-hack/1-source-map-file.min.css')
-        ).then(() => {
+        ).then(function() {
             assert.equal(
                 fixtureContent('write-hack/1-source-map-file.min.css'),
                 fixtureContent('1-source-map-file.min.css')
@@ -99,7 +99,7 @@ it('--source-map <filepath>', function() {
     return run(
             fixturePath('1.css'),
             '--source-map', fixturePath('write-hack/1-source-map-file.min.css.map')
-        ).output((res) => {
+        ).output(function(res) {
             assert.equal(
                 res,
                 fixtureContent('1-source-map-filepath.min.css')
