@@ -76,7 +76,7 @@ Examples:
 > csso my.css --output my.min.css --map maps/my.min.map
 ```
 
-Use `--input-map` option to specify input source map if needed. Possible values for option:
+Use `--input-source-map` option to specify input source map if needed. Possible values for option:
 
 - `auto` (default) - attempt to fetch input source map by follow steps:
   - try to fetch inline map from input
