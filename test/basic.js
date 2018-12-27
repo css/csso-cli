@@ -30,17 +30,24 @@ function run() {
     };
 
     wrapper.output = function(expected) {
-        proc.stdout.once('data', function(data) {
-            data = String(data).trim();
-            switch (typeof expected) {
-                case 'function':
-                    expected(data);
-                    break;
+        var buffer = [];
 
-                default:
-                    assert.equal(data, expected);
-            }
-        });
+        proc.stdout
+            .on('data', function(chunk) {
+                buffer.push(chunk);
+            })
+            .on('end', function() {
+                var data = buffer.join('').trim();
+
+                switch (typeof expected) {
+                    case 'function':
+                        expected(data);
+                        break;
+
+                    default:
+                        assert.equal(data, expected);
+                }
+            });
         return wrapper;
     };
 
@@ -107,6 +114,38 @@ it('--source-map <filepath>', function() {
             assert.equal(
                 fixtureContent('write-hack/1-source-map-file.min.css.map'),
                 fixtureContent('1-source-map-file.min.css.map')
+            );
+        });
+});
+
+it('should fetch a source map from a comment in source file', function() {
+    return run(
+            fixturePath('bootstrap-grid-source-map-filepath.css'),
+            '--source-map', fixturePath('write-hack/bootstrap-grid-source-map-filepath.min.css.map')
+        ).output(function(res) {
+            assert.equal(
+                res,
+                fixtureContent('bootstrap-grid-source-map-filepath.min.css')
+            );
+            assert.equal(
+                fixtureContent('write-hack/bootstrap-grid-source-map-filepath.min.css.map'),
+                fixtureContent('bootstrap-grid-source-map-filepath.min.css.map')
+            );
+        });
+});
+
+it('should fetch a source map from a file with .map extension', function() {
+    return run(
+            fixturePath('bootstrap-grid.css'),
+            '--source-map', fixturePath('write-hack/bootstrap-grid.min.css.map')
+        ).output(function(res) {
+            assert.equal(
+                res,
+                fixtureContent('bootstrap-grid.min.css')
+            );
+            assert.equal(
+                fixtureContent('write-hack/bootstrap-grid.min.css.map'),
+                fixtureContent('bootstrap-grid.min.css.map')
             );
         });
 });
