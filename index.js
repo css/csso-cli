@@ -305,7 +305,7 @@ function minifyStream(options) {
             if (sourceMap.input) {
                 result.map.applySourceMap(
                     new SourceMapConsumer(sourceMap.input),
-                    relInputFilename
+                    unixPathname(relInputFilename)
                 );
             }
 
