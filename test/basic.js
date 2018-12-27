@@ -13,6 +13,12 @@ function fixtureContent(filepath) {
     return fs.readFileSync(fixturePath(filepath), 'utf-8').trim();
 }
 
+function bufferFrom(data, encoding) {
+    return typeof Buffer.from === 'function'
+        ? Buffer.from(data, encoding)
+        : new Buffer(data, encoding);
+}
+
 function run() {
     var args = [path.join(__dirname, '../bin/csso')].concat(Array.prototype.slice.call(arguments));
     var proc = child.spawn(cmd, args, { stdio: 'pipe' });
@@ -59,9 +65,8 @@ function run() {
 }
 
 it('should output version', function() {
-    return run('-v').output(
-        require('csso/package.json').version
-    );
+    return run('-v')
+        .output(require('csso/package.json').version);
 });
 
 it('should read content from stdin if no file specified', function() {
@@ -79,7 +84,7 @@ it('--source-map inline', function() {
     return run(fixturePath('1.css'), '--source-map', 'inline')
         .output(function(res) {
             var expected = fixtureContent('1.min.css.map');
-            var actual = new Buffer(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8');
+            var actual = bufferFrom(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8');
 
             assert.equal(actual, expected);
         });
