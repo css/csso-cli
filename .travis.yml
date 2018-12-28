@@ -4,8 +4,7 @@ os:
   - windows
 script: "npm run travis"
 node_js:
-  - "0.10"
-  - "0.12"
+  - "6"
   - "8"
   - "10"
   - "node"
