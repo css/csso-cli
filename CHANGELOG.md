@@ -1,3 +1,7 @@
+## 2.0.2 (December 28, 2018)
+
+- Fixed one more issue with paths in source maps on Windows platform
+
 ## 2.0.1 (December 26, 2018)
 
 - Fixed source map paths when perform on Windows platform (path should be in unix format)
