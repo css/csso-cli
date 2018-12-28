@@ -1,3 +1,9 @@
+## next
+
+- Stop support Node.js before `6.14`
+- Updated dependencies and fixed known security issues
+- Fixed `--usage` option that didn't actually work
+
 ## 2.0.2 (December 28, 2018)
 
 - Fixed one more issue with paths in source maps on Windows platform

@@ -159,3 +159,8 @@ it('should disable structure optimisations with --no-restructure option', functi
     return run(fixturePath('1.css'), '--no-restructure')
         .output(fixtureContent('1-no-restructure.min.css'));
 });
+
+it('should use usage data', function() {
+    return run(fixturePath('usage.css'), '--usage', fixturePath('usage.css.json'))
+        .output(fixtureContent('usage.min.css'));
+});

@@ -243,7 +243,7 @@ function processOptions(options, args) {
     return {
         inputFile: inputFile,
         outputFile: outputFile,
-        usageData: usageFile,
+        usageData: usageData,
         sourceMap: sourceMap,
         inputSourceMap: inputSourceMap,
         declarationList: declarationList,
