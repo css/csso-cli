@@ -2,7 +2,6 @@ var assert = require('assert');
 var path = require('path');
 var fs = require('fs');
 var child = require('child_process');
-var Promise = require('es6-promise-polyfill').Promise;
 var cmd = 'node';
 
 function fixturePath(filepath) {
@@ -11,12 +10,6 @@ function fixturePath(filepath) {
 
 function fixtureContent(filepath) {
     return fs.readFileSync(fixturePath(filepath), 'utf-8').trim();
-}
-
-function bufferFrom(data, encoding) {
-    return typeof Buffer.from === 'function'
-        ? Buffer.from(data, encoding)
-        : new Buffer(data, encoding);
 }
 
 function run() {
@@ -84,7 +77,7 @@ it('--source-map inline', function() {
     return run(fixturePath('1.css'), '--source-map', 'inline')
         .output(function(res) {
             var expected = fixtureContent('1.min.css.map');
-            var actual = bufferFrom(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8');
+            var actual = Buffer.from(String(res).match(/data:application\/json;base64,(.+)/)[1], 'base64').toString('utf-8');
 
             assert.equal(actual, expected);
         });

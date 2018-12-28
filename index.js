@@ -8,18 +8,11 @@ function unixPathname(pathname) {
     return pathname.replace(/\\/g, '/');
 }
 
-function bufferFrom(data, encoding) {
-    return typeof Buffer.from === 'function'
-        ? Buffer.from(data, encoding)
-        : new Buffer(data, encoding);
-}
-
 function readFromStream(stream, minify) {
     var buffer = [];
 
-    // NOTE: don't chain until node.js 0.10 drop, since setEncoding isn't chainable in 0.10
-    stream.setEncoding('utf8');
     stream
+        .setEncoding('utf8')
         .on('data', function(chunk) {
             buffer.push(chunk);
         })
@@ -147,7 +140,7 @@ function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
 
                     if (inputMapComment.substr(0, 5) === 'data:') {
                         // decode source map content from comment
-                        inputMapContent = bufferFrom(inputMapComment.substr(inputMapComment.indexOf('base64,') + 7), 'base64').toString();
+                        inputMapContent = Buffer.from(inputMapComment.substr(inputMapComment.indexOf('base64,') + 7), 'base64').toString();
                     } else {
                         // value is filename – resolve it as absolute path
                         if (inputFile) {
@@ -327,7 +320,7 @@ function minifyStream(options) {
                 // inline source map
                 sourceMapAnnotation = '\n' +
                     '/*# sourceMappingURL=data:application/json;base64,' +
-                    bufferFrom(result.map.toString()).toString('base64') +
+                    Buffer.from(result.map.toString()).toString('base64') +
                     ' */';
             }
 

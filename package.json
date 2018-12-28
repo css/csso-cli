@@ -41,7 +41,6 @@
     "source-map": "^0.5.3"
   },
   "devDependencies": {
-    "es6-promise-polyfill": "^1.2.0",
     "eslint": "^5.11.0",
     "mocha": "^5.2.0"
   },
