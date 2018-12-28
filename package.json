@@ -28,27 +28,9 @@
     "csso": "./bin/csso"
   },
   "main": "./index",
-  "eslintConfig": {
-    "env": {
-      "node": true,
-      "mocha": true,
-      "es6": true
-    },
-    "rules": {
-      "no-duplicate-case": 2,
-      "no-undef": 2,
-      "no-unused-vars": [
-        2,
-        {
-          "vars": "all",
-          "args": "after-used"
-        }
-      ]
-    }
-  },
   "scripts": {
     "test": "mocha --reporter dot",
-    "codestyle": "jscs bin test index.js && eslint bin test index.js",
+    "codestyle": "eslint bin/* test index.js",
     "codestyle-and-test": "npm run codestyle && npm test",
     "travis": "npm run codestyle-and-test"
   },
@@ -60,8 +42,7 @@
   },
   "devDependencies": {
     "es6-promise-polyfill": "^1.2.0",
-    "eslint": "^2.2.0",
-    "jscs": "~2.10.0",
+    "eslint": "^5.11.0",
     "mocha": "~2.4.2"
   },
   "engines": {

@@ -92,67 +92,67 @@ it('--source-map inline', function() {
 
 it('--source-map file', function() {
     return run(
-            fixturePath('1.css'),
-            '--source-map', 'file',
-            '--output', fixturePath('write-hack/1-source-map-file.min.css')
-        ).then(function() {
-            assert.equal(
-                fixtureContent('write-hack/1-source-map-file.min.css'),
-                fixtureContent('1-source-map-file.min.css')
-            );
-            assert.equal(
-                fixtureContent('write-hack/1-source-map-file.min.css.map'),
-                fixtureContent('1-source-map-file.min.css.map')
-            );
-        });
+        fixturePath('1.css'),
+        '--source-map', 'file',
+        '--output', fixturePath('write-hack/1-source-map-file.min.css')
+    ).then(function() {
+        assert.equal(
+            fixtureContent('write-hack/1-source-map-file.min.css'),
+            fixtureContent('1-source-map-file.min.css')
+        );
+        assert.equal(
+            fixtureContent('write-hack/1-source-map-file.min.css.map'),
+            fixtureContent('1-source-map-file.min.css.map')
+        );
+    });
 });
 
 it('--source-map <filepath>', function() {
     return run(
-            fixturePath('1.css'),
-            '--source-map', fixturePath('write-hack/1-source-map-file.min.css.map')
-        ).output(function(res) {
-            assert.equal(
-                res,
-                fixtureContent('1-source-map-filepath.min.css')
-            );
-            assert.equal(
-                fixtureContent('write-hack/1-source-map-file.min.css.map'),
-                fixtureContent('1-source-map-file.min.css.map')
-            );
-        });
+        fixturePath('1.css'),
+        '--source-map', fixturePath('write-hack/1-source-map-file.min.css.map')
+    ).output(function(res) {
+        assert.equal(
+            res,
+            fixtureContent('1-source-map-filepath.min.css')
+        );
+        assert.equal(
+            fixtureContent('write-hack/1-source-map-file.min.css.map'),
+            fixtureContent('1-source-map-file.min.css.map')
+        );
+    });
 });
 
 it('should fetch a source map from a comment in source file', function() {
     return run(
-            fixturePath('bootstrap-grid-source-map-filepath.css'),
-            '--source-map', fixturePath('write-hack/bootstrap-grid-source-map-filepath.min.css.map')
-        ).output(function(res) {
-            assert.equal(
-                res,
-                fixtureContent('bootstrap-grid-source-map-filepath.min.css')
-            );
-            assert.equal(
-                fixtureContent('write-hack/bootstrap-grid-source-map-filepath.min.css.map'),
-                fixtureContent('bootstrap-grid-source-map-filepath.min.css.map')
-            );
-        });
+        fixturePath('bootstrap-grid-source-map-filepath.css'),
+        '--source-map', fixturePath('write-hack/bootstrap-grid-source-map-filepath.min.css.map')
+    ).output(function(res) {
+        assert.equal(
+            res,
+            fixtureContent('bootstrap-grid-source-map-filepath.min.css')
+        );
+        assert.equal(
+            fixtureContent('write-hack/bootstrap-grid-source-map-filepath.min.css.map'),
+            fixtureContent('bootstrap-grid-source-map-filepath.min.css.map')
+        );
+    });
 });
 
 it('should fetch a source map from a file with .map extension', function() {
     return run(
-            fixturePath('bootstrap-grid.css'),
-            '--source-map', fixturePath('write-hack/bootstrap-grid.min.css.map')
-        ).output(function(res) {
-            assert.equal(
-                res,
-                fixtureContent('bootstrap-grid.min.css')
-            );
-            assert.equal(
-                fixtureContent('write-hack/bootstrap-grid.min.css.map'),
-                fixtureContent('bootstrap-grid.min.css.map')
-            );
-        });
+        fixturePath('bootstrap-grid.css'),
+        '--source-map', fixturePath('write-hack/bootstrap-grid.min.css.map')
+    ).output(function(res) {
+        assert.equal(
+            res,
+            fixtureContent('bootstrap-grid.min.css')
+        );
+        assert.equal(
+            fixtureContent('write-hack/bootstrap-grid.min.css.map'),
+            fixtureContent('bootstrap-grid.min.css.map')
+        );
+    });
 });
 
 it('should disable structure optimisations with --no-restructure option', function() {
