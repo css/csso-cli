@@ -111,7 +111,7 @@ function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
         default:
             // process filename
             if (outputMap) {
-                // check path is reachable
+                // check if path is reachable
                 if (!fs.existsSync(path.dirname(outputMap))) {
                     console.error('Directory for map file should exists:', path.dirname(path.resolve(outputMap)));
                     process.exit(2);
@@ -129,7 +129,7 @@ function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
 
         case 'auto':
             if (outputMap) {
-                // try fetch source map from source
+                // try to fetch source map from source
                 let inputMapComment = source.match(/\/\*# sourceMappingURL=(\S+)\s*\*\/\s*$/);
 
                 if (inputFile === '<stdin>') {
@@ -137,7 +137,7 @@ function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
                 }
 
                 if (inputMapComment) {
-                    // if comment found – value is filename or base64-encoded source map
+                    // if comment is found – value is filename or base64-encoded source map
                     inputMapComment = inputMapComment[1];
 
                     if (inputMapComment.substr(0, 5) === 'data:') {
@@ -219,7 +219,7 @@ function processOptions(options, args) {
 
     if (usageFile) {
         if (!fs.existsSync(usageFile)) {
-            console.error('Usage data file doesn\'t found (%s)', usageFile);
+            console.error('Usage data file wasn\'t found (%s)', usageFile);
             process.exit(2);
         }
 
@@ -281,7 +281,7 @@ function minifyStream(options) {
                 debug: options.debug
             });
 
-            // for backward capability minify returns a string
+            // for backward compatibility minify returns a string
             if (typeof result === 'string') {
                 result = {
                     css: result,
