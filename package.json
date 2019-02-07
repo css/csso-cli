@@ -29,9 +29,9 @@
   },
   "main": "./index",
   "scripts": {
-    "lint": "eslint .",
+    "xo": "xo",
     "mocha": "mocha --reporter dot",
-    "test": "npm run lint && npm run mocha"
+    "test": "npm run xo && npm run mocha"
   },
   "dependencies": {
     "chokidar": "^2.1.0",
@@ -40,8 +40,8 @@
     "source-map": "^0.5.3"
   },
   "devDependencies": {
-    "eslint": "^5.13.0",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "xo": "^0.24.0"
   },
   "engines": {
     "node": ">=6.14.0"
@@ -49,5 +49,44 @@
   "files": [
     "bin/csso.js",
     "index.js"
-  ]
+  ],
+  "xo": {
+    "rules": {
+      "capitalized-comments": "off",
+      "default-case": "off",
+      "func-names": "off",
+      "indent": [
+        "error",
+        4,
+        {
+          "MemberExpression": "off",
+          "SwitchCase": 1
+        }
+      ],
+      "no-console": "off",
+      "no-negated-condition": "off",
+      "object-curly-spacing": [
+        "error",
+        "always"
+      ],
+      "prefer-destructuring": [
+        "error",
+        {
+          "object": true,
+          "array": false
+        }
+      ],
+      "quote-props": [
+        "error",
+        "consistent"
+      ],
+      "space-before-function-paren": [
+        "error",
+        "never"
+      ],
+      "unicorn/no-process-exit": "off",
+      "unicorn/explicit-length-check": "off",
+      "unicorn/filename-case": "off"
+    }
+  }
 }
