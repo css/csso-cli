@@ -2,6 +2,9 @@
   "name": "csso-cli",
   "version": "2.0.2",
   "description": "Command line interface for CSSO",
+  "repository": "css/csso-cli",
+  "license": "MIT",
+  "author": "Roman Dvornov <rdvornov@gmail.com> (https://github.com/lahmatiy)",
   "keywords": [
     "cli",
     "css",
@@ -10,24 +13,13 @@
     "compress",
     "optimisation"
   ],
-  "homepage": "https://github.com/css/csso-cli",
-  "author": "Roman Dvornov <rdvornov@gmail.com> (https://github.com/lahmatiy)",
-  "maintainers": [
-    {
-      "name": "Roman Dvornov",
-      "email": "rdvornov@gmail.com",
-      "github-username": "lahmatiy"
-    }
-  ],
-  "license": "MIT",
-  "repository": "css/csso-cli",
-  "bugs": {
-    "url": "https://github.com/css/csso-cli/issues"
-  },
   "bin": {
     "csso": "./bin/csso"
   },
   "main": "./index",
+  "engines": {
+    "node": ">=6.14.0"
+  },
   "scripts": {
     "test": "mocha --reporter dot",
     "codestyle": "eslint bin/* test index.js",
@@ -44,13 +36,8 @@
     "eslint": "^5.11.0",
     "mocha": "^5.2.0"
   },
-  "engines": {
-    "node": ">=6.14.0"
-  },
   "files": [
     "bin",
-    "index.js",
-    "LICENSE",
-    "README.md"
+    "index.js"
   ]
 }
