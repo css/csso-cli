@@ -1,6 +1,6 @@
 ## next
 
-- Stop support Node.js before `6.14`
+- Stop support Node.js prior `8.0`
 - Updated dependencies and fixed known security issues
 - Fixed `--usage` option that didn't actually work
 
