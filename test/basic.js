@@ -16,7 +16,9 @@ function run() {
     var args = [path.join(__dirname, '../bin/csso')].concat(Array.prototype.slice.call(arguments));
     var proc = child.spawn(cmd, args, { stdio: 'pipe' });
     var error = '';
+    var rejectWrapper;
     var wrapper = new Promise(function(resolve, reject) {
+        rejectWrapper = reject;
         proc.once('exit', function(code) {
             code ? reject(new Error(error)) : resolve();
         });
@@ -38,13 +40,14 @@ function run() {
             .on('end', function() {
                 var data = buffer.join('').trim();
 
-                switch (typeof expected) {
-                    case 'function':
+                try {
+                    if (typeof expected === 'function') {
                         expected(data);
-                        break;
-
-                    default:
+                    } else {
                         assert.equal(data, expected);
+                    }
+                } catch (e) {
+                    rejectWrapper(e);
                 }
             });
         return wrapper;
