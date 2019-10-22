@@ -1,8 +1,9 @@
-## next
+## 3.0.0 (October 22, 2019)
 
 - Stop support Node.js prior `8.0`
-- Updated dependencies and fixed known security issues
+- Updated dependencies and fixed known security issues (#15)
 - Fixed `--usage` option that didn't actually work
+- Fixed source map generation inconsistency across Node.js versions
 
 ## 2.0.2 (December 28, 2018)
 
