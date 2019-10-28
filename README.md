@@ -101,35 +101,35 @@ To get brief info about compression use `--stat` option.
 
 ```
 > echo '.test { color: #ff0000 }' | csso --stat >/dev/null
-File:       <stdin>
+Source:     <stdin>
 Original:   25 bytes
 Compressed: 16 bytes (64.00%)
 Saving:     9 bytes (36.00%)
-Time:       12 ms
-Memory:     0.346 MB
+Time:       7 ms
+Memory:     0.204 MB
 ```
 
 To get details about compression steps use `--debug` option.
 
 ```
 > echo '.test { color: green; color: #ff0000 } .foo { color: red }' | csso --debug
-## parsing done in 10 ms
+## parsing done in 4 ms
 
 Compress block #1
-(0.002ms) convertToInternal
-(0.000ms) clean
-(0.001ms) compress
-(0.002ms) prepare
-(0.000ms) initialRejoinRuleset
-(0.000ms) rejoinAtrule
-(0.000ms) disjoin
-(0.000ms) buildMaps
-(0.000ms) markShorthands
-(0.000ms) processShorthand
-(0.001ms) restructBlock
-(0.000ms) rejoinRuleset
-(0.000ms) restructRuleset
-## compressing done in 9 ms
+[0.000s] init
+[0.001s] clean
+[0.003s] replace
+[0.001s] prepare
+[0.001s] mergeAtrule
+[0.000s] initialMergeRuleset
+[0.000s] disjoinRuleset
+[0.000s] restructShorthand
+[0.001s] restructBlock
+[0.000s] mergeRuleset
+[0.000s] restructRuleset
+## compress done in 9 ms
+
+## generate done in 0 ms
 
 .foo,.test{color:red}
 ```
@@ -138,24 +138,29 @@ More details are providing when `--debug` option has a number greater than `1`:
 
 ```
 > echo '.test { color: green; color: #ff0000 } .foo { color: red }' | csso --debug 2
-## parsing done in 8 ms
+## parsing done in 4 ms
 
 Compress block #1
-(0.000ms) clean
+[0.001s] init
   .test{color:green;color:#ff0000}.foo{color:red}
 
-(0.001ms) compress
+[0.001s] clean
+  .test{color:green;color:#ff0000}.foo{color:red}
+
+[0.004s] replace
   .test{color:green;color:red}.foo{color:red}
 
 ...
 
-(0.002ms) restructBlock
-  .test{color:red}.foo{color:red}
-
-(0.001ms) rejoinRuleset
+[0.000s] mergeRuleset
   .foo,.test{color:red}
 
-## compressing done in 13 ms
+[0.000s] restructRuleset
+  .foo,.test{color:red}
+
+## compress done in 12 ms
+
+## generate done in 0 ms
 
 .foo,.test{color:red}
 ```
