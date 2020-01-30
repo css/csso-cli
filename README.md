@@ -61,7 +61,7 @@ Some examples:
 
 ### Source maps
 
-Source map doesn't generate by default. To generate map use `--map` CLI option, that can be:
+Source map doesn't generate by default. To generate map use `--source-map` CLI option, that can be:
 
 - `none` (default) – don't generate source map
 - `inline` – add source map into result CSS (via `/*# sourceMappingURL=application/json;base64,... */`)
@@ -71,9 +71,9 @@ Source map doesn't generate by default. To generate map use `--map` CLI option, 
 Examples:
 
 ```
-> csso my.css --map inline
-> csso my.css --output my.min.css --map file
-> csso my.css --output my.min.css --map maps/my.min.map
+> csso my.css --source-map inline
+> csso my.css --output my.min.css --source-map file
+> csso my.css --output my.min.css --source-map maps/my.min.map
 ```
 
 Use `--input-source-map` option to specify input source map if needed. Possible values for option:
