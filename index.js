@@ -2,7 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var cli = require('clap');
 var csso = require('csso');
-var SourceMapConsumer = require('source-map').SourceMapConsumer;
+var SourceMapConsumer = require('source-map-js').SourceMapConsumer;
 
 function unixPathname(pathname) {
     return pathname.replace(/\\/g, '/');
@@ -350,7 +350,7 @@ function minifyStream(options) {
     });
 }
 
-var command = cli.create('csso', '[input]')
+var command = cli.command('csso [input]')
     .version(require('csso/package.json').version)
     .option('-i, --input <filename>', 'Input file')
     .option('-o, --output <filename>', 'Output file (result outputs to stdout if not set)')
@@ -364,8 +364,8 @@ var command = cli.create('csso', '[input]')
     .option('--stat', 'Output statistics in stderr')
     .option('--debug [level]', 'Output intermediate state of CSS during a compression', debugLevel, 0)
     .option('--watch', 'Watch source file for changes')
-    .action(function(args) {
-        var options = processOptions(this.values, args);
+    .action(function({ options, args }) {
+        options = processOptions(options, args);
 
         if (options === null) {
             this.showHelp();
