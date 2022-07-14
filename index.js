@@ -1,32 +1,29 @@
-var fs = require('fs');
-var path = require('path');
-var cli = require('clap');
-var csso = require('csso');
-var SourceMapConsumer = require('source-map-js').SourceMapConsumer;
+const fs = require('fs');
+const path = require('path');
+const cli = require('clap');
+const csso = require('csso');
+const SourceMapConsumer = require('source-map-js').SourceMapConsumer;
 
 function unixPathname(pathname) {
     return pathname.replace(/\\/g, '/');
 }
 
 function readFromStream(stream, minify) {
-    var buffer = [];
+    const buffer = [];
 
     stream
         .setEncoding('utf8')
-        .on('data', function(chunk) {
-            buffer.push(chunk);
-        })
-        .on('end', function() {
-            minify(buffer.join(''));
-        });
+        .on('data', (chunk) => buffer.push(chunk))
+        .on('end', () => minify(buffer.join('')));
 }
 
 function showStat(filename, source, result, inputMap, map, time, mem) {
     function fmt(size) {
-        return String(size).split('').reverse().reduce(function(size, digit, idx) {
+        return String(size).split('').reverse().reduce((size, digit, idx) => {
             if (idx && idx % 3 === 0) {
                 size = ' ' + size;
             }
+
             return digit + size;
         }, '');
     }
@@ -49,42 +46,15 @@ function showStat(filename, source, result, inputMap, map, time, mem) {
     console.error('Memory:    ', (mem / (1024 * 1024)).toFixed(3), 'MB');
 }
 
-function showParseError(source, filename, details, message) {
-    function processLines(start, end) {
-        return lines.slice(start, end).map(function(line, idx) {
-            var num = String(start + idx + 1);
-
-            while (num.length < maxNumLength) {
-                num = ' ' + num;
-            }
-
-            return num + ' |' + line;
-        }).join('\n');
-    }
-
-    var lines = source.split(/\n|\r\n?|\f/);
-    var column = details.column;
-    var line = details.line;
-    var startLine = Math.max(1, line - 2);
-    var endLine = Math.min(line + 2, lines.length + 1);
-    var maxNumLength = Math.max(4, String(endLine).length) + 1;
-
-    console.error('\nParse error ' + filename + ': ' + message);
-    console.error(processLines(startLine - 1, line));
-    console.error(new Array(column + maxNumLength + 2).join('-') + '^');
-    console.error(processLines(line, endLine));
-    console.error();
-}
-
 function debugLevel(level) {
     // level is undefined when no param -> 1
     return isNaN(level) ? 1 : Math.max(Number(level), 0);
 }
 
 function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
-    var inputMapContent = null;
-    var inputMapFile = null;
-    var outputMapFile = null;
+    let inputMapContent = null;
+    let inputMapFile = null;
+    let outputMapFile = null;
 
     switch (outputMap) {
         case 'none':
@@ -128,7 +98,7 @@ function resolveSourceMap(source, inputMap, outputMap, inputFile, outputFile) {
         case 'auto':
             if (outputMap) {
                 // try fetch source map from source
-                var inputMapComment = source.match(/\/\*# sourceMappingURL=(\S+)\s*\*\/\s*$/);
+                let inputMapComment = source.match(/\/\*# sourceMappingURL=(\S+)\s*\*\/\s*$/);
 
                 if (inputFile === '<stdin>') {
                     inputFile = false;
@@ -189,19 +159,19 @@ function processCommentsOption(value) {
 }
 
 function processOptions(options, args) {
-    var inputFile = options.input || args[0];
-    var outputFile = options.output;
-    var usageFile = options.usage;
-    var usageData = false;
-    var sourceMap = options.sourceMap;
-    var inputSourceMap = options.inputSourceMap;
-    var declarationList = options.declarationList;
-    var restructure = Boolean(options.restructure);
-    var forceMediaMerge = Boolean(options.forceMediaMerge);
-    var comments = processCommentsOption(options.comments);
-    var debug = options.debug;
-    var statistics = options.stat;
-    var watch = options.watch;
+    let inputFile = options.input || args[0];
+    let outputFile = options.output;
+    const usageFile = options.usage;
+    let usageData = false;
+    const sourceMap = options.sourceMap;
+    const inputSourceMap = options.inputSourceMap;
+    const declarationList = options.declarationList;
+    const restructure = Boolean(options.restructure);
+    const forceMediaMerge = Boolean(options.forceMediaMerge);
+    const comments = processCommentsOption(options.comments);
+    const debug = options.debug;
+    const statistics = options.stat;
+    const watch = options.watch;
 
     if (process.stdin.isTTY && !inputFile && !outputFile) {
         return null;
@@ -234,69 +204,58 @@ function processOptions(options, args) {
     }
 
     return {
-        inputFile: inputFile,
-        outputFile: outputFile,
-        usageData: usageData,
-        sourceMap: sourceMap,
-        inputSourceMap: inputSourceMap,
-        declarationList: declarationList,
-        restructure: restructure,
-        forceMediaMerge: forceMediaMerge,
-        comments: comments,
-        statistics: statistics,
-        debug: debug,
-        watch: watch
+        inputFile,
+        outputFile,
+        usageData,
+        sourceMap,
+        inputSourceMap,
+        declarationList,
+        restructure,
+        forceMediaMerge,
+        comments,
+        statistics,
+        debug,
+        watch
     };
 }
 
 function minifyStream(options) {
-    var inputStream = options.inputFile !== '<stdin>'
+    const inputStream = options.inputFile !== '<stdin>'
         ? fs.createReadStream(options.inputFile)
         : process.stdin;
 
-    readFromStream(inputStream, function(source) {
-        var time = process.hrtime();
-        var mem = process.memoryUsage().heapUsed;
-        var relInputFilename = path.relative(process.cwd(), options.inputFile);
-        var sourceMap = resolveSourceMap(
+    readFromStream(inputStream, (source) => {
+        const startTime = Date.now();
+        const mem = process.memoryUsage().heapUsed;
+        const relInputFilename = path.relative(process.cwd(), options.inputFile);
+        const sourceMap = resolveSourceMap(
             source,
             options.inputSourceMap,
             options.sourceMap,
             options.inputFile,
             options.outputFile
         );
-        var sourceMapAnnotation = '';
-        var result;
+        let sourceMapAnnotation = '';
+        let result;
 
         // main action
-        try {
-            var minifyFunc = options.declarationList ? csso.minifyBlock : csso.minify;
-            result = minifyFunc(source, {
-                filename: unixPathname(relInputFilename),
-                sourceMap: Boolean(sourceMap.output),
-                usage: options.usageData,
-                restructure: options.restructure,
-                forceMediaMerge: options.forceMediaMerge,
-                comments: options.comments,
-                debug: options.debug
-            });
+        const minifyFunc = options.declarationList ? csso.minifyBlock : csso.minify;
+        result = minifyFunc(source, {
+            filename: unixPathname(relInputFilename),
+            sourceMap: Boolean(sourceMap.output),
+            usage: options.usageData,
+            restructure: options.restructure,
+            forceMediaMerge: options.forceMediaMerge,
+            comments: options.comments,
+            debug: options.debug
+        });
 
-            // for backward capability minify returns a string
-            if (typeof result === 'string') {
-                result = {
-                    css: result,
-                    map: null
-                };
-            }
-        } catch (e) {
-            if (e.parseError) {
-                showParseError(source, options.inputFile, e.parseError, e.message);
-                if (!options.debug) {
-                    process.exit(2);
-                }
-            }
-
-            throw e;
+        // for backward capability minify returns a string
+        if (typeof result === 'string') {
+            result = {
+                css: result,
+                map: null
+            };
         }
 
         if (sourceMap.output && result.map) {
@@ -336,21 +295,20 @@ function minifyStream(options) {
 
         // output statistics
         if (options.statistics) {
-            var timeDiff = process.hrtime(time);
             showStat(
                 relInputFilename,
                 source.length,
                 result.css.length,
                 sourceMap.inputFile,
                 sourceMapAnnotation.length,
-                parseInt(timeDiff[0] * 1e3 + timeDiff[1] / 1e6, 10),
+                Date.now() - startTime,
                 process.memoryUsage().heapUsed - mem
             );
         }
     });
 }
 
-var command = cli.command('csso [input]')
+const command = cli.command('csso [input]')
     .version(require('csso/package.json').version)
     .option('-i, --input <filename>', 'Input file')
     .option('-o, --output <filename>', 'Output file (result outputs to stdout if not set)')
@@ -364,7 +322,7 @@ var command = cli.command('csso [input]')
     .option('--stat', 'Output statistics in stderr')
     .option('--debug [level]', 'Output intermediate state of CSS during a compression', debugLevel, 0)
     .option('--watch', 'Watch source file for changes')
-    .action(function({ options, args }) {
+    .action(({ options, args }) => {
         options = processOptions(options, args);
 
         if (options === null) {
@@ -378,15 +336,13 @@ var command = cli.command('csso [input]')
         if (options.watch && options.inputFile !== '<stdin>') {
             // NOTE: require chokidar here to keep down start up time when --watch doesn't use
             // (yep, chokidar adds a penalty ~0.2-0.3s on its init)
-            require('chokidar').watch(options.inputFile).on('change', function() {
-                minifyStream(options);
-            });
+            require('chokidar')
+                .watch(options.inputFile)
+                .on('change', () => minifyStream(options));
         }
     });
 
 module.exports = {
-    run: command.run.bind(command),
-    isCliError: function(err) {
-        return err instanceof cli.Error;
-    }
+    run: (...args) =>command.run(...args),
+    isCliError: (err) => err instanceof cli.Error
 };
