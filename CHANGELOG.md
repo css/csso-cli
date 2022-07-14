@@ -1,8 +1,8 @@
-## next
+## 4.0.1 (July 14, 2022)
 
 - Fixed missed `lib` folder in the package (#27)
 
-## 4.0.0 (October 22, 2019)
+## 4.0.0 (July 14, 2022)
 
 - Stop support Node.js prior `12.20`
 - Bumped `CSSO` to `5.0.4`
