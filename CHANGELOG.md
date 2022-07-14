@@ -1,3 +1,9 @@
+## 4.0.0 (October 22, 2019)
+
+- Stop support Node.js prior `12.20`
+- Bumped `CSSO` to `5.0.4`
+- Bumped all the dependencies
+
 ## 3.0.0 (October 22, 2019)
 
 - Stop support Node.js prior `8.0`
