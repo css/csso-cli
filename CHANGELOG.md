@@ -1,3 +1,7 @@
+## next
+
+- Fixed missed `lib` folder in the package (#27)
+
 ## 4.0.0 (October 22, 2019)
 
 - Stop support Node.js prior `12.20`

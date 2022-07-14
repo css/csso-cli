@@ -38,6 +38,6 @@
   },
   "files": [
     "bin",
-    "index.js"
+    "lib"
   ]
 }
