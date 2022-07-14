@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var cli = require('../index.js');
+const cli = require('../lib/index.js');
 
 try {
     cli.run();

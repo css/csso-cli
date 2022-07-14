@@ -16,15 +16,15 @@
   "bin": {
     "csso": "./bin/csso"
   },
-  "main": "./index",
+  "main": "./lib/index.js",
   "engines": {
     "node": ">=8.0.0"
   },
   "scripts": {
     "test": "mocha --reporter dot",
-    "codestyle": "eslint bin/* test index.js",
-    "codestyle-and-test": "npm run codestyle && npm test",
-    "travis": "npm run codestyle-and-test"
+    "lint": "eslint bin/* test lib",
+    "lint-and-test": "npm run lint && npm test",
+    "travis": "npm run lint-and-test"
   },
   "dependencies": {
     "chokidar": "^3.5.3",
