@@ -1,3 +1,8 @@
+## 4.0.2 (February 28, 2023)
+
+- Fixed help output (#30)
+- Fixed engine field to `>=12.20`
+
 ## 4.0.1 (July 14, 2022)
 
 - Fixed missed `lib` folder in the package (#27)
